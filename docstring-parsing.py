@@ -119,7 +119,6 @@ def documentFunction(name) -> str:
     data = FunctionData()
     parseDocstringOf(function, data)
     parseAstOf(name, data)
-    print(data.params)
     retval = ""
     retval += "```{py:function} "
     retval += data.docstringSignature
@@ -163,6 +162,7 @@ def parseAstOf(name: str, data: FunctionData):
         param = data.params[paramName]
         param.name = paramName
         param.type = ast.unparse(ast.fix_missing_locations(arg.annotation))
+    data.returnType = ast.unparse(ast.fix_missing_locations(functionAST.returns))
 
 # print(documentFunction(cv2.aruco.calibrateCameraCharucoExtended))
 print(documentFunction("cv2.aruco.calibrateCameraCharucoExtended"))
