@@ -30,7 +30,7 @@ class FunctionData:
         self.notes: list[str] = []
         self.description: str = ""
         self.returnDescription: str = ""
-        self.returnType: str = None
+        self.returnType: str = "object"
 
     def __repr__(self):
         return str(self.__dict__)
@@ -115,46 +115,66 @@ def parseDocstringOf(function: Callable, data: FunctionData):
     # return data
 
 def documentFunction(name) -> str:
+    # print(f"Documenting {name}...")
     function = eval(name)
     data = FunctionData()
     parseDocstringOf(function, data)
     parseAstOf(name, data)
     retval = ""
-    retval += "```{py:function} "
+    retval += "````{py:function} "
     retval += data.docstringSignature
     retval += "\n\n"
     retval += data.brief
     retval += "\n\n"
     retval += data.description
-    retval += "\n\n"
-    for param in data.params.values():
-        retval += f"\n:param {param.type} {param.name}: {param.brief}"
-    if data.returnDescription != "":
-        retval += f"\n:return: {data.returnDescription}"
-    if data.returnType != "":
-        retval += f"\n:rettype: {data.returnType}"
     for note in data.notes:
         if note.type == "note":
             retval += f"\n```{{note}}\n{note.note}\n```"
         elif note.type == "sa":
             retval += f"\n**See also:** {note.note}"
         elif note.type == "deprecated":
-            retval += f"\n```{{deprecated}}\n{note.note}\n```"
-    retval += "\n```"
+            retval += f"\n```{{deprecated}} unknown\n{note.note}\n```"
+            # retval += f"\n**Deprecated:** {note.note}"
+    retval += "\n\n"
+    for param in data.params.values():
+        # retval += f"\n:param {param.type} {param.name}: {param.brief}"
+        retval += f"\n:param {param.name}: {param.brief}\n:type {param.name}: {param.type}"
+    if data.returnDescription != "":
+        retval += f"\n:return: {data.returnDescription}"
+    if data.returnType != "":
+        retval += f"\n:rettype: {data.returnType}"
+    retval += "\n````"
     return retval
 
-def documentFunctionsInModule(module) -> str:
+def documentFunctionsInModule(moduleName) -> str:
+    module = eval(moduleName)
+    functions: list[Callable] = inspect.getmembers(module, lambda x: callable(x) and not inspect.isclass(x))
+    # print(functions)
     retval = "## Functions\n"
+    for name, function in functions:
+        retval += documentFunction(moduleName + "." + name)
+        retval += "\n\n\n"
+    return retval
+
+def documentModule(moduleName) -> str:
+    retval = f"# `{moduleName}`\n"
+    retval += f"```{{py:module}} {moduleName}\n{eval(moduleName).__doc__}\n```\n"
+    retval += documentFunctionsInModule(moduleName) + "\n"
+    return retval
 
 def astOfFunction(name) -> ast.FunctionDef:
     resolver = typeshed_client.Resolver()
     nameInfo = resolver.get_fully_qualified_name(name)
+    if nameInfo is None:
+        return None
     if isinstance(nameInfo.ast, typeshed_client.OverloadedName):
         return nameInfo.ast.definitions[0]
     return nameInfo.ast
 
 def parseAstOf(name: str, data: FunctionData):
     functionAST = astOfFunction(name)
+    if functionAST is None:
+        return
     for arg in functionAST.args.args:
         paramName = arg.arg
         if paramName not in data.params:
@@ -165,5 +185,6 @@ def parseAstOf(name: str, data: FunctionData):
     data.returnType = ast.unparse(ast.fix_missing_locations(functionAST.returns))
 
 # print(documentFunction(cv2.aruco.calibrateCameraCharucoExtended))
-print(documentFunction("cv2.aruco.calibrateCameraCharucoExtended"))
+# print(documentFunction("cv2.aruco.calibrateCameraCharucoExtended"))
+print(documentModule("cv2.aruco"))
 # print(astOfFunction("cv2.aruco.calibrateCameraCharucoExtended"))
