@@ -4,6 +4,7 @@ import inspect
 from typing import Callable
 import typeshed_client
 import ast
+from pathlib import Path
 
 class ParamData:
     def __init__(self):
@@ -409,6 +410,12 @@ def parseAstOfClass(name: str, data: ClassData):
 
 # print(documentFunction(cv2.aruco.calibrateCameraCharucoExtended))
 # print(documentFunction("cv2.aruco.calibrateCameraCharucoExtended"))
-print(documentModule("cv2.aruco"))
+# print(documentModule("cv2.aruco"))
 # print(documentClassNamed("cv2.aruco.Dictionary"))
 # print(astOfFunction("cv2.aruco.calibrateCameraCharucoExtended"))
+
+modules = ["cv2.aruco", "cv2.dnn"]
+for moduleName in modules:
+    with open(Path(__file__).parent.parent / "opencv-python-docs" / "source" / f"{moduleName}.md", "w") as file:
+        file.write(documentModule(moduleName))
+
