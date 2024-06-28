@@ -6,6 +6,10 @@ import typeshed_client
 import ast
 from pathlib import Path
 
+LL_DEBUG_OVER = 1
+LL_DEBUG_SPECIFIC = 2
+logLevel = LL_DEBUG_OVER
+
 class ParamData:
     def __init__(self):
         self.name: str = ""
@@ -299,6 +303,7 @@ def documentFunctionsInModule(moduleName) -> str:
     # print(functions)
     retval = "## Functions\n"
     for name, function in functions:
+        if logLevel >= LL_DEBUG_OVER: print(f"Documenting function {moduleName}.{name}...")
         retval += documentFunctionNamed(moduleName + "." + name)
         retval += "\n\n\n"
     return retval
@@ -309,6 +314,7 @@ def documentClassesInModule(moduleName) -> str:
     # print(functions)
     retval = "## Classes\n"
     for name, theClass in classes:
+        if logLevel >= LL_DEBUG_OVER: print(f"Documenting class {moduleName}.{name}...")
         retval += documentClassNamed(moduleName + "." + name)
         retval += "\n\n\n"
     return retval
@@ -319,22 +325,27 @@ def documentAttributesInModule(moduleName) -> str:
     # print(functions)
     retval = "## Attributes\n"
     for name, value in attributes:
+        if logLevel >= LL_DEBUG_OVER: print(f"Documenting attribute {moduleName}.{name}...")
         retval += documentAttributeNamed(moduleName + "." + name)
         retval += "\n\n\n"
     return retval
 
-def documentModule(moduleName) -> str:
+def documentModule(moduleName, documentAttributes: bool = False) -> str:
     retval = f"# `{moduleName}`\n"
     retval += f"```{{py:module}} {moduleName}\n{eval(moduleName).__doc__}\n```\n"
-    retval += documentAttributesInModule(moduleName) + "\n"
+    if documentAttributes:
+        if logLevel >= LL_DEBUG_OVER: print(f"Documenting attributes in {moduleName}...")
+        retval += documentAttributesInModule(moduleName) + "\n"
+    if logLevel >= LL_DEBUG_OVER: print(f"Documenting classes in {moduleName}...")
     retval += documentClassesInModule(moduleName) + "\n"
+    if logLevel >= LL_DEBUG_OVER: print(f"Documenting functions in {moduleName}...")
     retval += documentFunctionsInModule(moduleName) + "\n"
     return retval
 
 def astOf(name) -> ast.AST:
     resolver = typeshed_client.Resolver()
     nameInfo = resolver.get_fully_qualified_name(name)
-    if nameInfo is None:
+    if nameInfo is None or not hasattr(nameInfo, "ast"):
         return None
     if isinstance(nameInfo.ast, typeshed_client.OverloadedName):
         return nameInfo.ast.definitions[0]
@@ -445,11 +456,11 @@ titlesonly: true
 # * cv2.dnn_objdetect - doesn't exist
 # * cv2.dnn_superres - doesn't exist
 
-modules = ["cv2.aruco", "cv2.barcode", "cv2.cuda", "cv2.dnn"]
+modules = ["cv2.aruco", "cv2.barcode", "cv2.cuda", "cv2.dnn", "cv2"]
 for moduleName in modules:
     print(f"Parsing {moduleName}...")
     with open(Path(__file__).parent.parent / "opencv-python-docs" / "source" / f"{moduleName}.md", "w") as file:
-        file.write(documentModule(moduleName))
+        file.write(documentModule(moduleName, documentAttributes=(moduleName != "cv2")))
 
 print("Making index.md...")
 with open(Path(__file__).parent.parent / "opencv-python-docs" / "source" / "index.md", "w") as file:
