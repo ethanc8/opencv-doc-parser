@@ -115,6 +115,8 @@ def parseDocstringOfClass(theClass: Callable, data: FunctionData):
         line = line.lstrip(" .*")
         line = line.strip()
         line = line.replace("\\f$", "$")
+        line = line.replace("\\f[", "$")
+        line = line.replace("\\f]", "$")
         # print(line)
         if line.startswith("@brief "):
             data.brief = line.removeprefix("@brief ")
@@ -160,6 +162,8 @@ def parseDocstringOfFunction(function: Callable, data: FunctionData):
         line = line.lstrip(" .*")
         line = line.strip()
         line = line.replace("\\f$", "$")
+        line = line.replace("\\f[", "$")
+        line = line.replace("\\f]", "$")
         # print(line)
         if line.startswith("@brief "):
             data.brief = line.removeprefix("@brief ")
