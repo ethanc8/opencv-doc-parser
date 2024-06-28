@@ -131,17 +131,31 @@ def parseDocstringOfClass(theClass: Callable, data: FunctionData):
             note.note = line.removeprefix("@sa ")
             data.notes.append(note)
             curData = AttributeReference(note, "note")
+        elif line.startswith("@see "):
+            note = NoteData()
+            note.type = "sa"
+            note.note = line.removeprefix("@see ")
+            data.notes.append(note)
+            curData = AttributeReference(note, "note")
         elif line.startswith("@deprecated "):
             note = NoteData()
             note.type = "deprecated"
             note.note = line.removeprefix("@deprecated ")
             data.notes.append(note)
             curData = AttributeReference(note, "note")
+        elif line.startswith("@code{."):
+            codelang = line.removeprefix("@code{.").removesuffix("}")
+            curData.setValue(curData.getValue() + f"\n```{codelang}\n")
+        elif line.startswith("@code"):
+            curData.setValue(curData.getValue() + "\n```c++\n")
+        elif line.startswith("@endcode"):
+            curData.setValue(curData.getValue() + "\n```\n")
         elif line == "":
             curData = None
         else:
             if curData is None:
                 curData = AttributeReference(data, "description")
+                data.description += "\n"
             curData.setValue(curData.getValue() + line + " ")
     # return data
 
