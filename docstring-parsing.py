@@ -196,6 +196,9 @@ def parseDocstringOfFunction(function: Callable, data: FunctionData):
         elif line.startswith("@return "):
             data.returnDescription = line.removeprefix("@return ")
             curData = AttributeReference(data, "returnDescription")
+        elif line.startswith("@returns "):
+            data.returnDescription = line.removeprefix("@returns ")
+            curData = AttributeReference(data, "returnDescription")
         elif line.startswith("@note "):
             note = NoteData()
             note.type = "note"
@@ -268,7 +271,7 @@ def documentFunction(function: Callable, data: FunctionData) -> str:
     if data.returnDescription != "":
         retval += f"\n:return: {data.returnDescription}"
     if data.returnType != "":
-        retval += f"\n:rettype: {data.returnType}"
+        retval += f"\n:rtype: {data.returnType}"
     retval += "\n````"
     return retval
 
