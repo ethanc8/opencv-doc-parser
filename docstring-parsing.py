@@ -8,7 +8,7 @@ from pathlib import Path
 
 LL_DEBUG_OVER = 1
 LL_DEBUG_SPECIFIC = 2
-logLevel = LL_DEBUG_OVER
+logLevel = LL_DEBUG_SPECIFIC
 
 class ParamData:
     def __init__(self):
@@ -143,20 +143,6 @@ def parseDocstringOfClass(theClass: Callable, data: FunctionData):
             note.note = line.removeprefix("@deprecated ")
             data.notes.append(note)
             curData = AttributeReference(note, "note")
-        elif line.startswith("@code{."):
-            codelang = line.removeprefix("@code{.").removesuffix("}")
-            curData.setValue(curData.getValue() + f"\n```{codelang}\n")
-        elif line.startswith("@code"):
-            curData.setValue(curData.getValue() + "\n```c++\n")
-        elif line.startswith("@endcode"):
-            curData.setValue(curData.getValue() + "\n```\n")
-        elif line == "":
-            curData = None
-        else:
-            if curData is None:
-                curData = AttributeReference(data, "description")
-                data.description += "\n"
-            curData.setValue(curData.getValue() + line + " ")
     # return data
 
 def parseDocstringOfFunction(function: Callable, data: FunctionData):
@@ -167,6 +153,7 @@ def parseDocstringOfFunction(function: Callable, data: FunctionData):
     if "Initialize self.  See help(type(self)) for accurate signature." not in lines[0]:
         data.docstringSignature = lines.pop(0)
     curData: Reference = None
+    inCodeBlock = False
     # TODO: If the line doesn't start with ".", then we need to return multiple functions;
     #     the original function was overloaded
     for line in lines:
@@ -225,18 +212,49 @@ def parseDocstringOfFunction(function: Callable, data: FunctionData):
             note.note = line.removeprefix("@sa ")
             data.notes.append(note)
             curData = AttributeReference(note, "note")
+        elif line.startswith("@see "):
+            note = NoteData()
+            note.type = "sa"
+            note.note = line.removeprefix("@see ")
+            data.notes.append(note)
+            curData = AttributeReference(note, "note")
         elif line.startswith("@deprecated "):
             note = NoteData()
             note.type = "deprecated"
             note.note = line.removeprefix("@deprecated ")
             data.notes.append(note)
             curData = AttributeReference(note, "note")
+        elif line.startswith("@code{."):
+            # if logLevel >= LL_DEBUG_SPECIFIC: print("Code block found!")
+            if curData is None:
+                curData = AttributeReference(data, "description")
+                data.description += "\n"
+            codelang = line.removeprefix("@code{.").removesuffix("}")
+            curData.setValue(curData.getValue() + f"\n```{codelang}\n")
+            inCodeBlock = True
+        elif line.startswith("@code"):
+            # if logLevel >= LL_DEBUG_SPECIFIC: print("Code block found!")
+            if curData is None:
+                curData = AttributeReference(data, "description")
+                data.description += "\n"
+            curData.setValue(curData.getValue() + "\n```c++\n")
+            inCodeBlock = True
+        elif line.startswith("@endcode"):
+            if curData is None:
+                curData = AttributeReference(data, "description")
+                data.description += "\n"
+            curData.setValue(curData.getValue() + "```\n")
+            inCodeBlock = False
         elif line == "":
             curData = None
         else:
             if curData is None:
                 curData = AttributeReference(data, "description")
-            curData.setValue(curData.getValue() + line + " ")
+                data.description += "\n"
+            if inCodeBlock:
+                curData.setValue(curData.getValue() + line + "\n")
+            else:
+                curData.setValue(curData.getValue() + line + " ")
     # return data
 
 def documentFunctionNamed(name) -> str:
@@ -506,3 +524,5 @@ with open(Path(__file__).parent.parent / "opencv-python-docs" / "source" / "inde
     file.write(makeIndexMD(modules))
 
 print("Done.")
+
+# print(documentFunctionNamed("cv2.subtract"))
