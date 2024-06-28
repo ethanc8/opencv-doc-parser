@@ -159,106 +159,105 @@ def parseDocstringOfFunction(function: Callable, data: FunctionData):
     # TODO: If the line doesn't start with ".", then we need to return multiple functions;
     #     the original function was overloaded
     for line in lines:
-        line = line.lstrip(" .*")
-        line = line.strip()
-        line = line.replace("\\f$", "$")
-        line = line.replace("\\f[", "$")
-        line = line.replace("\\f]", "$")
-        # print(line)
-        if line.startswith("@brief "):
-            data.brief = line.removeprefix("@brief ")
-            curData = AttributeReference(data, "brief")
-        elif line.startswith("@param "):
-            splitline = line.split()
-            paramName = splitline[1]
-            if paramName not in data.params:
-                data.params[paramName] = ParamData()
-            param = data.params[paramName]
-            param.name = splitline[1]
-            param.brief = " ".join(splitline[2:])
-            curData = AttributeReference(param, "brief")
-            # data.params.append(param)
-        elif line.startswith("@param[in]"):
-            splitline = line.split()
-            paramName = splitline[1]
-            if paramName not in data.params:
-                data.params[paramName] = ParamData()
-            param = data.params[paramName]
-            param.name = splitline[1]
-            param.brief = "[in] " + " ".join(splitline[2:])
-            curData = AttributeReference(param, "brief")
-            # data.params.append(param)
-        elif line.startswith("@param[out]"):
-            splitline = line.split()
-            paramName = splitline[1]
-            if paramName not in data.params:
-                data.params[paramName] = ParamData()
-            param = data.params[paramName]
-            param.name = splitline[1]
-            param.brief = "[out] " + " ".join(splitline[2:])
-            curData = AttributeReference(param, "brief")
-            # data.params.append(param)
-        elif line.startswith("@return "):
-            data.returnDescription = line.removeprefix("@return ")
-            curData = AttributeReference(data, "returnDescription")
-        elif line.startswith("@returns "):
-            data.returnDescription = line.removeprefix("@returns ")
-            curData = AttributeReference(data, "returnDescription")
-        elif line.startswith("@note "):
-            note = NoteData()
-            note.type = "note"
-            note.note = line.removeprefix("@note ")
-            data.notes.append(note)
-            curData = AttributeReference(note, "note")
-        elif line.startswith("@sa "):
-            note = NoteData()
-            note.type = "sa"
-            note.note = line.removeprefix("@sa ")
-            data.notes.append(note)
-            curData = AttributeReference(note, "note")
-        elif line.startswith("@see "):
-            note = NoteData()
-            note.type = "sa"
-            note.note = line.removeprefix("@see ")
-            data.notes.append(note)
-            curData = AttributeReference(note, "note")
-        elif line.startswith("@deprecated "):
-            note = NoteData()
-            note.type = "deprecated"
-            note.note = line.removeprefix("@deprecated ")
-            data.notes.append(note)
-            curData = AttributeReference(note, "note")
-        elif line.startswith("@code{."):
-            # if logLevel >= LL_DEBUG_SPECIFIC: print("Code block found!")
-            if curData is None:
-                curData = AttributeReference(data, "description")
-                data.description += "\n"
-            codelang = line.removeprefix("@code{.").removesuffix("}")
-            curData.setValue(curData.getValue() + f"\n```{codelang}\n")
-            inCodeBlock = True
-        elif line.startswith("@code"):
-            # if logLevel >= LL_DEBUG_SPECIFIC: print("Code block found!")
-            if curData is None:
-                curData = AttributeReference(data, "description")
-                data.description += "\n"
-            curData.setValue(curData.getValue() + "\n```c++\n")
-            inCodeBlock = True
-        elif line.startswith("@endcode"):
-            if curData is None:
-                curData = AttributeReference(data, "description")
-                data.description += "\n"
-            curData.setValue(curData.getValue() + "```\n")
-            inCodeBlock = False
-        elif line == "":
-            curData = None
-        else:
-            if curData is None:
-                curData = AttributeReference(data, "description")
-                data.description += "\n"
-            if inCodeBlock:
-                curData.setValue(curData.getValue() + line + "\n")
+        if line.startswith(".   "):
+            line = line.removeprefix(".   ")
+            # line = line.lstrip(".*")
+            # line = line.strip()
+            line = line.replace("\\f$", "$")
+            line = line.replace("\\f[", "$")
+            line = line.replace("\\f]", "$")
+            # print(line)
+            if line.startswith("@brief "):
+                data.brief = line.removeprefix("@brief ")
+                curData = AttributeReference(data, "brief")
+            elif line.startswith("@param "):
+                splitline = line.split()
+                paramName = splitline[1]
+                if paramName not in data.params:
+                    data.params[paramName] = ParamData()
+                param = data.params[paramName]
+                param.name = splitline[1]
+                param.brief = " ".join(splitline[2:])
+                curData = AttributeReference(param, "brief")
+                # data.params.append(param)
+            elif line.startswith("@param[in]"):
+                splitline = line.split()
+                paramName = splitline[1]
+                if paramName not in data.params:
+                    data.params[paramName] = ParamData()
+                param = data.params[paramName]
+                param.name = splitline[1]
+                param.brief = "[in] " + " ".join(splitline[2:])
+                curData = AttributeReference(param, "brief")
+                # data.params.append(param)
+            elif line.startswith("@param[out]"):
+                splitline = line.split()
+                paramName = splitline[1]
+                if paramName not in data.params:
+                    data.params[paramName] = ParamData()
+                param = data.params[paramName]
+                param.name = splitline[1]
+                param.brief = "[out] " + " ".join(splitline[2:])
+                curData = AttributeReference(param, "brief")
+                # data.params.append(param)
+            elif line.startswith("@return "):
+                data.returnDescription = line.removeprefix("@return ")
+                curData = AttributeReference(data, "returnDescription")
+            elif line.startswith("@returns "):
+                data.returnDescription = line.removeprefix("@returns ")
+                curData = AttributeReference(data, "returnDescription")
+            elif line.startswith("@note "):
+                note = NoteData()
+                note.type = "note"
+                note.note = line.removeprefix("@note ")
+                data.notes.append(note)
+                curData = AttributeReference(note, "note")
+            elif line.startswith("@sa "):
+                note = NoteData()
+                note.type = "sa"
+                note.note = line.removeprefix("@sa ")
+                data.notes.append(note)
+                curData = AttributeReference(note, "note")
+            elif line.startswith("@see "):
+                note = NoteData()
+                note.type = "sa"
+                note.note = line.removeprefix("@see ")
+                data.notes.append(note)
+                curData = AttributeReference(note, "note")
+            elif line.startswith("@deprecated "):
+                note = NoteData()
+                note.type = "deprecated"
+                note.note = line.removeprefix("@deprecated ")
+                data.notes.append(note)
+                curData = AttributeReference(note, "note")
+            elif line.startswith("@code{."):
+                # if logLevel >= LL_DEBUG_SPECIFIC: print("Code block found!")
+                if curData is None:
+                    curData = AttributeReference(data, "description")
+                    data.description += "\n"
+                codelang = line.removeprefix("@code{.").removesuffix("}")
+                curData.setValue(curData.getValue() + f"\n```{codelang}\n")
+                inCodeBlock = True
+            elif line.startswith("@code"):
+                # if logLevel >= LL_DEBUG_SPECIFIC: print("Code block found!")
+                if curData is None:
+                    curData = AttributeReference(data, "description")
+                    data.description += "\n"
+                curData.setValue(curData.getValue() + "\n```c++\n")
+                inCodeBlock = True
+            elif line.startswith("@endcode"):
+                if curData is None:
+                    curData = AttributeReference(data, "description")
+                    data.description += "\n"
+                curData.setValue(curData.getValue() + "```\n")
+                inCodeBlock = False
+            elif line == "":
+                curData = None
             else:
-                curData.setValue(curData.getValue() + line + " ")
+                if curData is None:
+                    curData = AttributeReference(data, "description")
+                    data.description += "\n"
+                curData.setValue(curData.getValue() + line + "\n")
     # return data
 
 def documentFunctionNamed(name) -> str:
