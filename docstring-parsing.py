@@ -153,6 +153,8 @@ def parseDocstringOfFunction(function: Callable, data: FunctionData):
     if "Initialize self.  See help(type(self)) for accurate signature." not in lines[0]:
         data.docstringSignature = lines.pop(0)
     curData: Reference = None
+    # TODO: If the line doesn't start with ".", then we need to return multiple functions;
+    #     the original function was overloaded
     for line in lines:
         line = line.lstrip(" .*")
         line = line.strip()
@@ -169,6 +171,26 @@ def parseDocstringOfFunction(function: Callable, data: FunctionData):
             param = data.params[paramName]
             param.name = splitline[1]
             param.brief = " ".join(splitline[2:])
+            curData = AttributeReference(param, "brief")
+            # data.params.append(param)
+        elif line.startswith("@param[in]"):
+            splitline = line.split()
+            paramName = splitline[1]
+            if paramName not in data.params:
+                data.params[paramName] = ParamData()
+            param = data.params[paramName]
+            param.name = splitline[1]
+            param.brief = "[in] " + " ".join(splitline[2:])
+            curData = AttributeReference(param, "brief")
+            # data.params.append(param)
+        elif line.startswith("@param[out]"):
+            splitline = line.split()
+            paramName = splitline[1]
+            if paramName not in data.params:
+                data.params[paramName] = ParamData()
+            param = data.params[paramName]
+            param.name = splitline[1]
+            param.brief = "[out] " + " ".join(splitline[2:])
             curData = AttributeReference(param, "brief")
             # data.params.append(param)
         elif line.startswith("@return "):
